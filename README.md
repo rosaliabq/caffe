@@ -28,8 +28,8 @@ layer {
   top: "data"
   top: "label"
   dense_image_data_param {
-    source: "/mnt/ssd/home/rosalia/data/mtyai_semantic/train.txt"
-    synth_source: "/mnt/ssd/home/rosalia/data/mtyai_semantic/synth.txt"
+    source: "/mnt/ssd/home/rosalia/data/cityscapes/train.txt"
+    synth_source: "/mnt/ssd/home/rosalia/data/synthia/synth.txt"
     new_width: 480
     new_height: 300
     batch_size: 16
