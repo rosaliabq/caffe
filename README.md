@@ -21,7 +21,7 @@ This caffe distribution includes a combination of custom layers to be able to tr
 
 * **DenseImageData** : Data layer that allows to train semantic segmentation networks. It supports augmentation with synthetic data (batches generated with half-real, half-synthetic images). Source: https://github.com/alexgkendall/caffe-segnet
 
-''''
+```
 layer {
   name: "data"
   type: "DenseImageData"
@@ -36,7 +36,7 @@ layer {
     shuffle: true
   }
 }
-''''
+```
 
 ## Custom distributions
 
