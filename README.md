@@ -15,6 +15,29 @@ Check out the [project site](http://caffe.berkeleyvision.org) for all the detail
 
 and step-by-step examples.
 
+## Custom Layers
+
+This caffe distribution includes a combination of custom layers to be able to train and deploy different types of networks:
+
+* **DenseImageData** : Data layer that allows to train semantic segmentation networks. It supports augmentation with synthetic data (batches generated with half-real, half-synthetic images). Source: https://github.com/alexgkendall/caffe-segnet
+
+''''
+layer {
+  name: "data"
+  type: "DenseImageData"
+  top: "data"
+  top: "label"
+  dense_image_data_param {
+    source: "/mnt/ssd/home/rosalia/data/mtyai_semantic/train.txt"
+    synth_source: "/mnt/ssd/home/rosalia/data/mtyai_semantic/synth.txt"
+    new_width: 480
+    new_height: 300
+    batch_size: 16
+    shuffle: true
+  }
+}
+''''
+
 ## Custom distributions
 
  - [Intel Caffe](https://github.com/BVLC/caffe/tree/intel) (Optimized for CPU and support for multi-node), in particular Xeon processors (HSW, BDW, SKX, Xeon Phi).
