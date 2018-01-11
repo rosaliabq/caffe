@@ -419,6 +419,8 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  //all custom layer go here:  
+  optional DenseImageDataParameter dense_image_data_param = 208;
 }
 
 // Message that stores parameters used to apply transformation
@@ -684,6 +686,31 @@ message DataParameter {
   // Prefetch queue (Increase if data feeding bandwidth varies, within the
   // limit of device memory for GPU training)
   optional uint32 prefetch = 10 [default = 4];
+}
+
+message DenseImageDataParameter {
+  // Specify the data source file.
+  optional string source = 1;
+  // Specify the batch size.
+  optional uint32 batch_size = 2;
+  // The rand_skip variable is for the data layer to skip a few data points
+  // to avoid all asynchronous sgd clients to start at the same point. The skip
+  // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
+  // be larger than the number of keys in the database.
+  optional uint32 rand_skip = 3 [default = 0];
+  // Whether or not ImageLayer should shuffle the list of files at every epoch.
+  optional bool shuffle = 4 [default = false];
+  // It will also resize images if new_height or new_width are not zero.
+  optional uint32 new_height = 5 [default = 0];
+  optional uint32 new_width = 6 [default = 0];
+  // Specify if the images are color or gray
+  optional bool is_color = 7 [default = true];
+  optional string mean_file = 8;
+  optional string root_folder = 9 [default = ""];
+  optional bool mirror = 10 [default = false];
+  optional uint32 crop_width = 11 [default = 0];
+  optional uint32 crop_height = 12 [default = 0];
+  optional string synth_source = 13 [default = ""];
 }
 
 message DropoutParameter {

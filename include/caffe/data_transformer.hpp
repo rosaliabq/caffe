@@ -49,6 +49,9 @@ class DataTransformer {
    */
   void Transform(const vector<Datum> & datum_vector,
                 Blob<Dtype>* transformed_blob);
+                
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
+                bool preserve_pixel_vals);
 
 #ifdef USE_OPENCV
   /**
