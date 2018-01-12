@@ -106,6 +106,20 @@ layer {
   }
 }
 ```
+* **Interp** : Interpolation layer, allows to resize (shrink or zoom) an image by a factor. Source: https://github.com/hszhao/PSPNet
+
+```
+layer {
+  name: "data_sub2"
+  type: "Interp"
+  bottom: "data_sub1"
+  top: "data_sub2"
+  interp_param {
+    shrink_factor: 2
+    //zoom_factor: 2
+  }
+}
+```
 
 ## Custom distributions
 
