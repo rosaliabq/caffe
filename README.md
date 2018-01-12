@@ -38,6 +38,23 @@ layer {
 }
 ```
 
+* **Upsample** : This layer upsamples (unpooling operation) the input feature map according to some previous pooling operation. Source: https://github.com/alexgkendall/caffe-segnet
+
+```
+layer {
+  name: "decoder_bottle1_other_unpool"
+  type: "Upsample"
+  bottom: "decoder_bottle1_other_bn"
+  bottom: "bottleneck6_other_pool_mask"
+  top: "decoder_bottle1_other_unpool"
+  upsample_param {
+    scale: 2
+    pad_out_h: true     #Use padding in case of initial odd width or height
+    pad_out_w: false
+  }
+}
+```
+
 ## Custom distributions
 
  - [Intel Caffe](https://github.com/BVLC/caffe/tree/intel) (Optimized for CPU and support for multi-node), in particular Xeon processors (HSW, BDW, SKX, Xeon Phi).
