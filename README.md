@@ -82,6 +82,31 @@ layer {
 }
 ```
 
+* **ConvolutionDepthwise** : Depthwise convolutions as implemented in MobileNet paper. Source: https://github.com/BVLC/caffe/pull/5665
+
+```
+layer {
+  name: "conv1/dw"
+  type: "ConvolutionDepthwise"
+  bottom: "conv0"
+  top: "conv1/dw"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  convolution_param {
+    num_output: 32
+    bias_term: false
+    pad: 1
+    kernel_size: 3
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+  }
+}
+```
+
 ## Custom distributions
 
  - [Intel Caffe](https://github.com/BVLC/caffe/tree/intel) (Optimized for CPU and support for multi-node), in particular Xeon processors (HSW, BDW, SKX, Xeon Phi).
