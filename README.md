@@ -55,6 +55,33 @@ layer {
 }
 ```
 
+* **SoftmaxWithLoss** : Added class weighting (it helps to deal with imbalanced datasets). Source: https://github.com/alexgkendall/caffe-segnet
+
+```
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "conv8"
+  bottom: "label"
+  top: "loss"
+  loss_param {
+    #ignore_label: 0
+    weight_by_label_freqs: true
+    class_weighting: 0.4
+    class_weighting: 0.3
+    class_weighting: 0.6
+    class_weighting: 13.7
+    class_weighting: 2.0
+    class_weighting: 0.5
+    class_weighting: 3.7
+    class_weighting: 1.4
+  }
+  softmax_param {
+    engine: CAFFE
+  }
+}
+```
+
 ## Custom distributions
 
  - [Intel Caffe](https://github.com/BVLC/caffe/tree/intel) (Optimized for CPU and support for multi-node), in particular Xeon processors (HSW, BDW, SKX, Xeon Phi).
