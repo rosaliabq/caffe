@@ -121,6 +121,58 @@ layer {
 }
 ```
 
+* **YOLO support**: adding support for YOLOv1. Source: https://github.com/yeahkun/caffe-yolo
+
+**BoxData**: support for YOLO data input encoding. 
+
+layer {
+  name: "data"
+  type: "BoxData"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN  
+  }
+  transform_param {
+    mirror: false
+    force_color: true
+    mean_value: 155
+    mean_value: 155
+    mean_value: 155
+  }
+  data_param {
+    source: ".pascalvoc/trainval_lmdb"
+    batch_size: 16
+    side: 7
+    backend: LMDB
+  }
+}
+
+**DetectionLoss**: YOLO loss function.
+
+layer {
+  name: "loss"
+  type: "DetectionLoss"
+  bottom: "regression"
+  bottom: "label"
+  top: "loss"
+  loss_weight: 1
+  detection_loss_param {
+    side: 7
+    num_class: 20
+    num_object: 2
+    object_scale: 1.0
+    noobject_scale: 0.5
+    class_scale: 1.0
+    coord_scale: 5.0
+    sqrt: true
+    constriant: true
+  }
+}
+
+**New lr policy**: "multifixed" (configurable with stagelr+stageiter)
+
+
 ## Custom distributions
 
  - [Intel Caffe](https://github.com/BVLC/caffe/tree/intel) (Optimized for CPU and support for multi-node), in particular Xeon processors (HSW, BDW, SKX, Xeon Phi).

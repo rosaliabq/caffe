@@ -1,4 +1,9 @@
 #include <fcntl.h>
+#include <boost/filesystem.hpp>
+#include <boost/foreach.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
@@ -69,7 +74,51 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   CHECK(proto.SerializeToOstream(&output));
 }
 
+// Do the file extension and encoding match?
+static bool matchExt(const std::string & fn,
+                     std::string en) {
+  size_t p = fn.rfind('.');
+  std::string ext = p != fn.npos ? fn.substr(p) : fn;
+  std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+  std::transform(en.begin(), en.end(), en.begin(), ::tolower);
+  if ( ext == en )
+    return true;
+  if ( en == "jpg" && ext == "jpeg" )
+    return true;
+  return false;
+}
+
 #ifdef USE_OPENCV
+bool ReadBoxDataToDatum(const string& filename, const string& annoname,
+    const map<string, int>& label_map, const int height, const int width, 
+    const bool is_color, const std::string & encoding, Datum* datum) {
+  int ori_w, ori_h;
+  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
+  ori_w = cv_img.cols;
+  ori_h = cv_img.rows;
+  if (cv_img.data) {
+    if (encoding.size()) {
+      if ( (cv_img.channels() == 3) == is_color && !height && !width &&
+          matchExt(filename, encoding) )
+        return ReadFileToDatum(filename, annoname, label_map, ori_w, ori_h, datum);
+      std::vector<uchar> buf;
+      cv::imencode("."+encoding, cv_img, buf);
+      datum->set_data(std::string(reinterpret_cast<char*>(&buf[0]),
+                      buf.size()));
+      datum->set_encoded(true);
+      // read xml anno data
+      ParseXmlToDatum(annoname, label_map, ori_w, ori_h, datum);
+      return true;
+    }
+    CVMatToDatum(cv_img, datum);
+    // read xml anno data
+    ParseXmlToDatum(annoname, label_map, ori_w, ori_h, datum);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 cv::Mat ReadImageToCVMat(const string& filename, const int height,
     const int width, const int min_dim, const int max_dim,
     const bool is_color) {
@@ -166,7 +215,7 @@ cv::Mat ReadImageToCVMat(const string& filename) {
   return ReadImageToCVMat(filename, 0, 0, true);
 }
 
-// Do the file extension and encoding match?
+// Do the file extension and encoding match? 
 static bool matchExt(const std::string & fn,
                      std::string en) {
   size_t p = fn.rfind('.');
@@ -299,4 +348,97 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   datum->set_data(buffer);
 }
 #endif  // USE_OPENCV
+
+int name_to_label(const string& name, const map<string, int>& label_map) {
+  map<string, int>::const_iterator it = label_map.find(name);
+  if (it == label_map.end()) 
+    return -1;
+  else
+    return it->second;
+}
+
+void ParseXmlToDatum(const string& annoname, const map<string, int>& label_map,
+    int ori_w, int ori_h, Datum* datum) {
+  boost::property_tree::ptree pt;
+  read_xml(annoname, pt);
+  int width(0), height(0);
+  try {
+    height = pt.get<int>("annotation.size.height");
+    width = pt.get<int>("annotation.size.width");
+    CHECK_EQ(ori_w, width);
+    CHECK_EQ(ori_h, height);
+  } catch (const boost::property_tree::ptree_error &e) {
+    LOG(WARNING) << "When paring " << annoname << ": " << e.what();
+  }
+  datum->clear_float_data();
+  BOOST_FOREACH(boost::property_tree::ptree::value_type &v1, pt.get_child("annotation")) {
+    if (v1.first == "object") {
+      boost::property_tree::ptree object = v1.second;
+      int label(-1);
+      vector<float> box(4, 0);
+      int difficult(0);
+      BOOST_FOREACH(boost::property_tree::ptree::value_type &v2, object.get_child("")) {
+        boost::property_tree::ptree pt2 = v2.second;
+        if (v2.first == "name") {
+          string name = pt2.data();
+          // map name to label
+          label = name_to_label(name, label_map);
+          if (label < 0) {
+            LOG(FATAL) << "Anno file " << annoname << " -> unknown name: " << name;
+          }
+        } else if (v2.first == "bndbox") {
+          int xmin = pt2.get("xmin", 0);
+          int ymin = pt2.get("ymin", 0);
+          int xmax = pt2.get("xmax", 0);
+          int ymax = pt2.get("ymax", 0);
+          LOG_IF(WARNING, xmin < 0 || xmin > ori_w) << annoname << 
+              " bounding box exceeds image boundary";
+          LOG_IF(WARNING, xmax < 0 || xmax > ori_w) << annoname << 
+              " bounding box exceeds image boundary";
+          LOG_IF(WARNING, ymin < 0 || ymin > ori_h) << annoname << 
+              " bounding box exceeds image boundary";
+          LOG_IF(WARNING, ymax < 0 || ymax > ori_h) << annoname << 
+              " bounding box exceeds image boundary";
+          LOG_IF(WARNING, xmin > xmax) << annoname << 
+              " bounding box exceeds image boundary";
+          LOG_IF(WARNING, ymin > ymax) << annoname << 
+              " bounding box exceeds image boundary";
+          box[0] = float(xmin + (xmax - xmin) / 2.) / ori_w;
+          box[1] = float(ymin + (ymax - ymin) / 2.) / ori_h;
+          box[2] = float(xmax - xmin) / ori_w;
+          box[3] = float(ymax - ymin) / ori_h;
+        } else if (v2.first == "difficult") {
+          difficult = atoi(pt2.data().c_str());
+        }
+      }
+      CHECK_GE(label, 0) << "label must start at 0";
+      datum->add_float_data(float(label));
+      datum->add_float_data(float(difficult));
+      for (int i = 0; i < 4; ++i) {
+        datum->add_float_data(box[i]);
+      }
+    }
+  }
+}
+
+bool ReadFileToDatum(const string& filename, const string& annoname,
+      const map<string, int>& label_map, int ori_w, int ori_h, Datum* datum) {
+  std::streampos size;
+
+  fstream file(filename.c_str(), ios::in|ios::binary|ios::ate);
+  if (file.is_open()) {
+    size = file.tellg();
+    std::string buffer(size, ' ');
+    file.seekg(0, ios::beg);
+    file.read(&buffer[0], size);
+    file.close();
+    datum->set_data(buffer);
+    datum->set_encoded(true);
+    ParseXmlToDatum(annoname, label_map, ori_w, ori_h, datum);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 }  // namespace caffe

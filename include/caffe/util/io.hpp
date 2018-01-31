@@ -146,6 +146,10 @@ cv::Mat ReadImageToCVMat(const string& filename,
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width);
 
+bool ReadBoxDataToDatum(const std::string& filename, const std::string& annoname,
+    const std::map<std::string, int>& label_map, const int height, const int width, 
+    const bool is_color, const std::string & encoding, Datum* datum);
+    
 cv::Mat ReadImageToCVMat(const string& filename,
     const bool is_color);
    
@@ -157,6 +161,11 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color);
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 #endif  // USE_OPENCV
 
+void ParseXmlToDatum(const std::string& annoname, const std::map<std::string, int>& label_map,
+    int ori_w, int ori_h, Datum* datum);
+
+bool ReadFileToDatum(const std::string& filename, const string& annoname,
+    const std::map<std::string, int>& label_map, int ori_w, int ori_h, Datum* datum);                                                                                              
 }  // namespace caffe
 
 #endif   // CAFFE_UTIL_IO_H_

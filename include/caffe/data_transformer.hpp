@@ -7,8 +7,15 @@
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+
 namespace caffe {
 
+class BoxLabel {
+ public:
+  float class_label_;
+  float difficult_;
+  float box_[4];
+};
 /**
  * @brief Applies common transformations to the input data, such as
  * scaling, mirroring, substracting the image mean...
@@ -52,6 +59,8 @@ class DataTransformer {
                 
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
                 bool preserve_pixel_vals);
+   
+   void Transform(const Datum& datum, Blob<Dtype>* transformed_blob, vector<BoxLabel>* box_labels);
 
 #ifdef USE_OPENCV
   /**

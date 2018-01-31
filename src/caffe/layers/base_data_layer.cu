@@ -15,12 +15,12 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   top[0]->ReshapeLike(prefetch_current_->data_);
   top[0]->set_gpu_data(prefetch_current_->data_.mutable_gpu_data());
   if (this->output_labels_) {
-    // Reshape to loaded labels.
-    top[1]->ReshapeLike(prefetch_current_->label_);
-    top[1]->set_gpu_data(prefetch_current_->label_.mutable_gpu_data());
+        // Reshape to loaded labels.
+        top[1]->ReshapeLike(prefetch_current_->label_);
+        top[1]->set_gpu_data(prefetch_current_->label_.mutable_gpu_data());
+       
   }
 }
-
 INSTANTIATE_LAYER_GPU_FORWARD(BasePrefetchingDataLayer);
 
 }  // namespace caffe

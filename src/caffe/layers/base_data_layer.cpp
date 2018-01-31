@@ -24,7 +24,8 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     output_labels_ = false;
   } else {
     output_labels_ = true;
-  }
+  }  
+  box_label_ = false;
   data_transformer_.reset(
       new DataTransformer<Dtype>(transform_param_, this->phase_));
   data_transformer_->InitRand();
@@ -56,15 +57,17 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
   for (int i = 0; i < prefetch_.size(); ++i) {
     prefetch_[i]->data_.mutable_cpu_data();
     if (this->output_labels_) {
-      prefetch_[i]->label_.mutable_cpu_data();
+        prefetch_[i]->label_.mutable_cpu_data();
+      
     }
+    
   }
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
     for (int i = 0; i < prefetch_.size(); ++i) {
       prefetch_[i]->data_.mutable_gpu_data();
       if (this->output_labels_) {
-        prefetch_[i]->label_.mutable_gpu_data();
+          prefetch_[i]->label_.mutable_gpu_data();
       }
     }
   }
@@ -120,9 +123,9 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
   top[0]->ReshapeLike(prefetch_current_->data_);
   top[0]->set_cpu_data(prefetch_current_->data_.mutable_cpu_data());
   if (this->output_labels_) {
-    // Reshape to loaded labels.
-    top[1]->ReshapeLike(prefetch_current_->label_);
-    top[1]->set_cpu_data(prefetch_current_->label_.mutable_cpu_data());
+        top[1]->ReshapeLike(prefetch_current_->label_);
+        top[1]->set_cpu_data(prefetch_current_->label_.mutable_cpu_data());
+    
   }
 }
 
