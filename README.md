@@ -125,6 +125,7 @@ layer {
 
 **BoxData**: support for YOLO data input encoding. 
 
+```
 layer {
   name: "data"
   type: "BoxData"
@@ -147,9 +148,11 @@ layer {
     backend: LMDB
   }
 }
+```
 
 **DetectionLoss**: YOLO loss function.
 
+```
 layer {
   name: "loss"
   type: "DetectionLoss"
@@ -169,6 +172,7 @@ layer {
     constriant: true
   }
 }
+```
 
 **New lr policy**: "multifixed" (configurable with stagelr+stageiter)
 
