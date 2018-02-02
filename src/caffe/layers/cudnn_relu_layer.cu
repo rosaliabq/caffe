@@ -9,7 +9,7 @@ template <typename Dtype>
 void CuDNNReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   // Fallback to standard Caffe for leaky ReLU.
-  if (ReLULayer<Dtype>::layer_param_.relu_param().negative_slope() != 0) {
+  if (ReLULayer<Dtype>::layer_param_.relu_param().negative_slope() != 0 || ReLULayer<Dtype>::layer_param_.relu_param().bound() > 0) {
     return ReLULayer<Dtype>::Forward_gpu(bottom, top);
   }
 
@@ -41,7 +41,7 @@ void CuDNNReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 
   // Fallback to standard Caffe for leaky ReLU.
-  if (ReLULayer<Dtype>::layer_param_.relu_param().negative_slope() != 0) {
+  if (ReLULayer<Dtype>::layer_param_.relu_param().negative_slope() != 0 || ReLULayer<Dtype>::layer_param_.relu_param().bound() > 0) {
     return ReLULayer<Dtype>::Backward_gpu(top, propagate_down, bottom);
   }
 

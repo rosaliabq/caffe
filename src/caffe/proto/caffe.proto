@@ -1117,6 +1117,7 @@ message ReLUParameter {
     CUDNN = 2;
   }
   optional Engine engine = 2 [default = DEFAULT];
+  optional int32 bound = 3 [default = 0]; 
 }
 
 message ReshapeParameter {

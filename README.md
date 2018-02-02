@@ -176,6 +176,19 @@ layer {
 
 **New lr policy**: "multifixed" (configurable with stagelr+stageiter)
 
+* **Bounded ReLU support**: works as a ReLU, with a upper limit (if x<0: f(x)=0, if 0<x<bound: f(x)=x, if x>bound: f(x)=bound).
+
+``` 
+layer {
+  name: "conv1/relu"
+  type: "ReLU"
+  bottom: "conv1"
+  top: "conv1"
+  relu_param {
+    bound: 15
+  }
+}
+```
 
 ## Custom distributions
 
