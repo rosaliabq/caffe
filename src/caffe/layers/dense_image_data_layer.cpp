@@ -31,6 +31,7 @@ void DenseImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bott
   const int crop_width  = this->layer_param_.dense_image_data_param().crop_width();
   const bool is_color  = this->layer_param_.dense_image_data_param().is_color();
   string root_folder = this->layer_param_.dense_image_data_param().root_folder();
+  const float scale  = this->layer_param_.dense_image_data_param().scale();
 
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
@@ -38,6 +39,7 @@ void DenseImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bott
   CHECK((crop_height == 0 && crop_width == 0) ||
       (crop_height > 0 && crop_width > 0)) << "Current implementation requires "
       "crop_height and crop_width to be set at the same time.";
+  CHECK((scale != 0)) << "Scale must not be 0";
   // Read the file with filenames and labels
   const string& source = this->layer_param_.dense_image_data_param().source();
   LOG(INFO) << "Opening file " << source;
@@ -89,10 +91,13 @@ void DenseImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bott
 
   // sanity check label image
   cv::Mat cv_lab = ReadImageToCVMat(root_folder + lines_[lines_id_].second,
-                                    new_height, new_width, false, true);
+                                    (float)new_height/scale, (float)new_width/scale, false, true);
   CHECK(cv_lab.channels() == 1) << "Can only handle grayscale label images";
+  if (scale==1.0) 
+  {
   CHECK(cv_lab.rows == height && cv_lab.cols == width) << "Input and label "
       << "image heights and widths must match";
+   }
 
   const int crop_size = this->layer_param_.transform_param().crop_size();
   const int batch_size = this->layer_param_.dense_image_data_param().batch_size();
@@ -125,6 +130,7 @@ void DenseImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bott
     }
     this->transformed_label_.Reshape(1, 1, crop_height, crop_width);
   } else {
+      
     top[0]->Reshape(batch_size, channels, height, width);
     // this->prefetch_data_.Reshape(batch_size, channels, height, width);
     for (int i = 0; i < this->prefetch_.size(); ++i) {
@@ -132,12 +138,13 @@ void DenseImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bott
     }
     this->transformed_data_.Reshape(1, channels, height, width);
     // similarly reshape label data blobs
-    top[1]->Reshape(batch_size, 1, height, width);
+    top[1]->Reshape(batch_size, 1, height/scale, width/scale);
     // this->prefetch_label_.Reshape(batch_size, 1, height, width);
     for (int i = 0; i < this->prefetch_.size(); ++i) {
-        this->prefetch_[i]->label_.Reshape(batch_size, 1, height, width);
+        this->prefetch_[i]->label_.Reshape(batch_size, 1, height/scale, width/scale);
     }
-    this->transformed_label_.Reshape(1, 1, height, width);
+    this->transformed_label_.Reshape(1, 1, height/scale, width/scale);
+    
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
@@ -176,6 +183,8 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int crop_width  = dense_image_data_param.crop_width();
   const int crop_size = this->layer_param_.transform_param().crop_size();
   const bool is_color = dense_image_data_param.is_color();
+  const float scale = dense_image_data_param.scale();
+  
   string root_folder = dense_image_data_param.root_folder();
 
   // Reshape on single input batches for inputs of varying dimension.
@@ -225,7 +234,7 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
            new_height, new_width, is_color);
        CHECK(cv_img.data) << "Could not load " << synthlines_[lines_id_].first;
        cv_lab = ReadImageToCVMat(root_folder + synthlines_[lines_id_].second,
-           new_height, new_width, false, true);
+           (float)new_height/scale, (float)new_width/scale, false, true);
        CHECK(cv_lab.data) << "Could not load " << synthlines_[lines_id_].second;
        //printf("%s %s\n", synthlines_[lines_id_].first.c_str(), synthlines_[lines_id_].second.c_str() );
     }
@@ -234,7 +243,7 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
          new_height, new_width, is_color);
      CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
      cv_lab = ReadImageToCVMat(root_folder + lines_[lines_id_].second,
-         new_height, new_width, false, true);
+         (float)new_height/scale, (float)new_width/scale, false, true);
      CHECK(cv_lab.data) << "Could not load " << lines_[lines_id_].second;
      //printf("%s %s\n", lines_[lines_id_].first.c_str(), lines_[lines_id_].second.c_str() );
     }

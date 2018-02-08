@@ -19,7 +19,7 @@ and step-by-step examples.
 
 This caffe distribution includes a combination of custom layers to be able to train and deploy different types of networks:
 
-* **DenseImageData** : Data layer that allows to train semantic segmentation networks. It supports augmentation with synthetic data (batches generated with half-real, half-synthetic images). Source: https://github.com/alexgkendall/caffe-segnet
+* **DenseImageData** : Data layer that allows to train semantic segmentation networks. It supports augmentation with synthetic data (batches generated with half-real, half-synthetic images). Adding extra support to pretrain the encoder with parameter "Scale" as in ENet paper (https://arxiv.org/abs/1606.02147) .Source: https://github.com/alexgkendall/caffe-segnet
 
 ```
 layer {
@@ -34,6 +34,7 @@ layer {
     new_height: 300
     batch_size: 16
     shuffle: true
+    scale: 1.0 #scale down label image to pretrain encoder
   }
 }
 ```
