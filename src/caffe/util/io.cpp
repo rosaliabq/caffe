@@ -74,11 +74,11 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
   CHECK(proto.SerializeToOstream(&output));
 }
 
-// Do the file extension and encoding match?
+// Do the file extension and encoding match? 
 static bool matchExt(const std::string & fn,
                      std::string en) {
   size_t p = fn.rfind('.');
-  std::string ext = p != fn.npos ? fn.substr(p) : fn;
+  std::string ext = p != fn.npos ? fn.substr(p+1) : fn;
   std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
   std::transform(en.begin(), en.end(), en.begin(), ::tolower);
   if ( ext == en )
@@ -86,7 +86,7 @@ static bool matchExt(const std::string & fn,
   if ( en == "jpg" && ext == "jpeg" )
     return true;
   return false;
-}
+} 
 
 #ifdef USE_OPENCV
 bool ReadBoxDataToDatum(const string& filename, const string& annoname,
@@ -213,20 +213,6 @@ cv::Mat ReadImageToCVMat(const string& filename,
 
 cv::Mat ReadImageToCVMat(const string& filename) {
   return ReadImageToCVMat(filename, 0, 0, true);
-}
-
-// Do the file extension and encoding match? 
-static bool matchExt(const std::string & fn,
-                     std::string en) {
-  size_t p = fn.rfind('.');
-  std::string ext = p != fn.npos ? fn.substr(p+1) : fn;
-  std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-  std::transform(en.begin(), en.end(), en.begin(), ::tolower);
-  if ( ext == en )
-    return true;
-  if ( en == "jpg" && ext == "jpeg" )
-    return true;
-  return false;
 }
 
 bool ReadImageToDatum(const string& filename, const int label,
